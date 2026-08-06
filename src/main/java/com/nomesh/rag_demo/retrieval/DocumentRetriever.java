@@ -32,8 +32,20 @@ public class DocumentRetriever {
         SearchRequest request = SearchRequest.builder()
                 .query(question)
                 .topK(5)
+                .similarityThreshold(0.70)
                 .build();
 
         return vectorStore.similaritySearch(request);
     }
 }
+
+
+/*
+ * Score  | 	Interpretation
+ * -------------------------
+ * > 0.90	|  Excellent match
+ * 0.80–0.90|  Very good
+ * 0.70–0.80|  Good
+ * 0.60–0.70|  Acceptable
+ * < 0.50	|  Usually irrelevant
+ */
