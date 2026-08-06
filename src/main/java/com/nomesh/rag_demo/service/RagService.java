@@ -55,9 +55,7 @@ public class RagService {
     ) {
 
 
-        List<Document> documents =
-                documentRetriever.retrieve(message);
-
+        List<Document> documents = documentRetriever.retrieve(message);
 
         if (documents.isEmpty()) {
 
@@ -68,15 +66,6 @@ public class RagService {
         String context = documents.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n"));
-
-        System.out.println("========== RAG CONTEXT ==========");
-        System.out.println(context);
-        System.out.println("==================================");
-
-        documents.forEach(document -> {
-            System.out.println("===== DOCUMENT METADATA =====");
-            System.out.println(document.getMetadata());
-        });
 
 
         String prompt = """

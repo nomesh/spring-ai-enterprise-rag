@@ -32,7 +32,7 @@ public class DocumentRetriever {
         SearchRequest request = SearchRequest.builder()
                 .query(question)
                 .topK(5)
-                .similarityThreshold(0.70)
+                .similarityThreshold(0.50)
                 .build();
 
         return vectorStore.similaritySearch(request);
