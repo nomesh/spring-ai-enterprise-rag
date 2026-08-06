@@ -28,8 +28,6 @@ import java.util.Map;
 
         List<Document> enrichedDocuments = new ArrayList<>();
 
-        int chunkNumber = 1;
-
         for (Document document : documents) {
 
             document.getMetadata().put("source", sourceFileName);
@@ -42,11 +40,6 @@ import java.util.Map;
             document.getMetadata().put(
                     "ingestedAt",
                     LocalDateTime.now().toString()
-            );
-
-            document.getMetadata().put(
-                    "chunkNumber",
-                    chunkNumber++
             );
 
             document.getMetadata().put("source", sourceFileName);

@@ -9,7 +9,13 @@ import java.util.List;
 
 /**
  * Retrieval (R) - Perform the similarity search for the documents requested via query prompt.
- * and search for requested documents in vector store
+ * and search for requested documents in vector store.
+
+ * Notice something important:
+ * You did not search for the exact words.
+ * You searched for the meaning.
+  * That's why semantic search is so powerful.
+ *
  * @author Nomesh De Silva
  */
 @Component
