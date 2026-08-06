@@ -7,6 +7,7 @@ import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.core.io.Resource;
 
 import java.util.List;
+import java.util.Map;
 
 import static org.springframework.ai.chat.memory.ChatMemory.CONVERSATION_ID;
 
@@ -65,6 +66,45 @@ public class RAGutils {
 
 
         return results;
+    }
+
+    /**
+     * Prepearing the MetaData for the Citation
+     * @param metadata
+     * @param key
+     * @param type
+     * @return
+     * @param <T>
+     */
+    public static <T> T getMetadata(
+            Map<String, Object> metadata,
+            String key,
+            Class<T> type) {
+
+        Object value = metadata.get(key);
+
+        if (value == null) {
+            return null;
+        }
+
+        try {
+            if (type == String.class) {
+                return type.cast(value.toString());
+            }
+
+            if (type == Integer.class) {
+                return type.cast(Integer.valueOf(value.toString()));
+            }
+
+            if (type == Double.class) {
+                return type.cast(Double.valueOf(value.toString()));
+            }
+
+            return type.cast(value);
+
+        } catch (Exception ex) {
+            return null;
+        }
     }
 
 }

@@ -2,15 +2,15 @@ package com.nomesh.rag_demo.model;
 
 public record SourceCitation(
 
-        String documentName,
+        String source,
 
-        String documentType,
+        String fileType,
 
-        String pageNumber,
+        Integer pageNumber,
 
-        String chunkId,
+        Integer chunkNumber,
 
-        Double similarityScore
+        Double distance
 
 ) {
 }
