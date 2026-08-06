@@ -1,11 +1,14 @@
 package com.nomesh.rag_demo.service;
 
 
+import com.nomesh.rag_demo.model.MetaDataKeys;
 import com.nomesh.rag_demo.model.SourceCitation;
+import com.nomesh.rag_demo.utils.RAGutils;
 import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 
@@ -71,21 +74,33 @@ public class CitationService {
                         null;
 
 
+        Map<String, Object> metadata = document.getMetadata();
 
         return new SourceCitation(
 
-                documentName,
-
-                documentType,
-
-                pageNumber,
-
-                chunkId,
+                RAGutils.getMetadata(
+                        metadata,
+                        documentName,
+                        String.class
+                ),
+                RAGutils.getMetadata(
+                        metadata,
+                        documentType,
+                        String.class
+                ),
+                RAGutils.getMetadata(
+                        metadata,
+                        MetaDataKeys.PAGE_NUMBER,
+                        Integer.class
+                ),
+                RAGutils.getMetadata(
+                        metadata,
+                        MetaDataKeys.CHUNK_NUMBER,
+                        Integer.class
+                ),
 
                 score
-
         );
-
     }
 
 
