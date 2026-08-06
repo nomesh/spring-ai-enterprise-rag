@@ -76,6 +76,11 @@ public class RagService {
         System.out.println(context);
         System.out.println("==================================");
 
+        documents.forEach(document -> {
+            System.out.println("===== DOCUMENT METADATA =====");
+            System.out.println(document.getMetadata());
+        });
+
 
         String prompt = """
         You are an enterprise knowledge assistant.
