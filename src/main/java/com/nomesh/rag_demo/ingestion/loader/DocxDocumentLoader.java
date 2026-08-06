@@ -4,9 +4,9 @@ import org.springframework.ai.document.Document;
 
 import java.util.List;
 
-public class DocxDocumentLoader implements DocumentLoader {
+public class DocxDocumentLoader { // implements DocumentLoader {
 
-    @Override
+//    @Override
     public List<Document> load() {
         return List.of();
     }

@@ -5,9 +5,9 @@ import org.springframework.ai.document.Document;
 import java.util.ArrayList;
 import java.util.List;
 
-public class PDFDocumentLoader implements DocumentLoader {
+public class PDFDocumentLoader { //implements DocumentLoader {
 
-    @Override
+   // @Override
     public List<Document> load() {
 
         List<Document> documents = new ArrayList<>();

@@ -12,15 +12,12 @@ public class DocumentIndexer {
 
     private final VectorStore vectorStore;
 
-    @Autowired
     public DocumentIndexer(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
 
 
-    public void index(List<Document> documents){
-
+    public void index(List<Document> documents) {
         vectorStore.add(documents);
-
     }
 }
