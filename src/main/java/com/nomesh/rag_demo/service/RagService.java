@@ -6,14 +6,11 @@ import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.prompt.PromptTemplate;
-import org.springframework.stereotype.Service;
 import org.springframework.ai.document.Document;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.stream.Collectors;
-
-import java.util.Map;
 
 @Service
 public class RagService {
@@ -58,9 +55,7 @@ public class RagService {
     ) {
 
 
-        List<Document> documents =
-                documentRetriever.retrieve(message);
-
+        List<Document> documents = documentRetriever.retrieve(message);
 
         if (documents.isEmpty()) {
 
@@ -71,10 +66,6 @@ public class RagService {
         String context = documents.stream()
                 .map(Document::getText)
                 .collect(Collectors.joining("\n\n"));
-
-        System.out.println("========== RAG CONTEXT ==========");
-        System.out.println(context);
-        System.out.println("==================================");
 
 
         String prompt = """
@@ -107,7 +98,7 @@ public class RagService {
                 message
         );
 
-        /**
+        /*
          * Providing better context with memory passing the conversation ID
          * The AI knows the context belongs to the same conversation.
          */
