@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * retrieval quality depends heavily on good document preparation.
  * Before implementing retrieval, we want to make sure the data entering PGVector is enterprise-ready.
- * @authoer Nomesh De Silva
+ * @author Nomesh De Silva
  *
  */
     @Component
