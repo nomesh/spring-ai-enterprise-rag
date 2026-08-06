@@ -1,65 +1,115 @@
 package com.nomesh.rag_demo.service;
 
+import com.nomesh.rag_demo.retrieval.DocumentRetriever;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
 import org.springframework.ai.chat.memory.InMemoryChatMemoryRepository;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
-import org.springframework.ai.chat.prompt.PromptTemplate;
+import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
 
-
-import java.util.Map;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class RagService {
 
 
     private final ChatClient chatClient;
+    private final DocumentRetriever documentRetriever;
 
-
-    public RagService(ChatClient.Builder builder) {
+    public RagService(
+            ChatClient.Builder builder,
+            DocumentRetriever documentRetriever
+    ) {
 
 
         ChatMemory chatMemory =
                 MessageWindowChatMemory
-                .builder().chatMemoryRepository(new InMemoryChatMemoryRepository())
-                .maxMessages(10)
-                .build();
+                        .builder()
+                        .chatMemoryRepository(
+                                new InMemoryChatMemoryRepository()
+                        )
+                        .maxMessages(10)
+                        .build();
 
 
-        this.chatClient = builder
-                .defaultAdvisors(MessageChatMemoryAdvisor
-                        .builder(chatMemory)
-                        .build())
-                .build();
+        this.chatClient =
+                builder
+                        .defaultAdvisors(
+                                MessageChatMemoryAdvisor
+                                        .builder(chatMemory)
+                                        .build()
+                        )
+                        .build();
+
+
+        this.documentRetriever = documentRetriever;
     }
 
 
-    public String ask(String conversationId, String question) {
+    public String ask(
+            String conversationId,
+            String message
+    ) {
 
 
-        String template = """
-                You are an enterprise Java architect.
-                
-                Answer clearly and professionally.
-                
-                Question:
-                {question}
-                """;
+        List<Document> documents = documentRetriever.retrieve(message);
+
+        if (documents.isEmpty()) {
+
+            return "I could not find relevant information in the company knowledge base.";
+        }
 
 
-        PromptTemplate promptTemplate = new PromptTemplate(template);
+        String context = documents.stream()
+                .map(Document::getText)
+                .collect(Collectors.joining("\n\n"));
 
-        String prompt = promptTemplate.render(Map.of("question", question));
 
-        return chatClient.prompt().advisors(advisor -> advisor.param(ChatMemory.CONVERSATION_ID, conversationId))
-                .system("""
-                    You are a senior software architect
-                    specializing in Spring Boot,
-                    cloud systems and AI.
-                    """)
-                .user(prompt)
+        String prompt = """
+        You are an enterprise knowledge assistant.
+
+        Use only the provided context to answer the question.
+
+        Extract the answer from the context even if
+        the wording is different from the question.
+
+        Do not say you don't know if the answer
+        can reasonably be inferred from the context.
+        
+        If the answer is not available in the context,
+        state that you do not have enough information.
+        Do not make up information.
+        
+        Answer concisely.
+        Return only the answer, no explanation.
+
+        Context:
+        %s
+
+        Question:
+        %s
+
+        Answer:
+        """.formatted(
+                context,
+                message
+        );
+
+        /*
+         * Providing better context with memory passing the conversation ID
+         * The AI knows the context belongs to the same conversation.
+         */
+        return chatClient
+                .prompt(prompt)
+                .advisors(
+                        advisor -> advisor.param(
+                                ChatMemory.CONVERSATION_ID,
+                                conversationId
+                        )
+                )
                 .call()
                 .content();
     }
