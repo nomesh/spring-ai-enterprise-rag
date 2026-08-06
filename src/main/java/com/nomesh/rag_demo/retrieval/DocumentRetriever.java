@@ -7,6 +7,11 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+/**
+ * Retrieval (R) - Perform the similarity search for the documents requested via query prompt.
+ * and search for requested documents in vector store
+ * @author Nomesh De Silva
+ */
 @Component
 public class DocumentRetriever {
 
