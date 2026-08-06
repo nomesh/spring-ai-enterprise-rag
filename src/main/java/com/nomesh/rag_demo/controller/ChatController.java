@@ -1,5 +1,6 @@
 package com.nomesh.rag_demo.controller;
 
+import com.nomesh.rag_demo.model.RAGResponse;
 import com.nomesh.rag_demo.service.RagService;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,7 +20,7 @@ public class ChatController {
 
 
     @GetMapping
-    public String chat(
+    public RAGResponse chat(
             @RequestParam String conversationId,
             @RequestParam String message
     ) {

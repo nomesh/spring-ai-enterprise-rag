@@ -1,5 +1,8 @@
 package com.nomesh.rag_demo.service;
 
+import com.nomesh.rag_demo.model.MetaDataKeys;
+import com.nomesh.rag_demo.model.RAGResponse;
+import com.nomesh.rag_demo.model.SourceCitation;
 import com.nomesh.rag_demo.retrieval.DocumentRetriever;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.advisor.MessageChatMemoryAdvisor;
@@ -10,7 +13,10 @@ import org.springframework.ai.document.Document;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.nomesh.rag_demo.utils.RAGutils.*;
 
 @Service
 public class RagService {
@@ -49,7 +55,7 @@ public class RagService {
     }
 
 
-    public String ask(
+    public RAGResponse ask(
             String conversationId,
             String message
     ) {
@@ -57,16 +63,24 @@ public class RagService {
 
         List<Document> documents = documentRetriever.retrieve(message);
 
+        // No documents found from semantic search
         if (documents.isEmpty()) {
-
-            return "I could not find relevant information in the company knowledge base.";
+            return new RAGResponse("I could not find relevant information in the company knowledge base.", List.of());
         }
 
+        /*
+            Create the CONTEXT out of retrieved documents
+         */
 
-        String context = documents.stream()
+        String context =
+                documents
+                .stream()
                 .map(Document::getText)
-                .collect(Collectors.joining("\n\n"));
+                .collect(Collectors.joining("\n"));
 
+        /* PROMPT :
+                ask to perform a similarity (semantic) search for the context generated above only.
+         */
 
         String prompt = """
         You are an enterprise knowledge assistant.
@@ -102,7 +116,9 @@ public class RagService {
          * Providing better context with memory passing the conversation ID
          * The AI knows the context belongs to the same conversation.
          */
-        return chatClient
+
+        String answer =
+                chatClient
                 .prompt(prompt)
                 .advisors(
                         advisor -> advisor.param(
@@ -112,5 +128,40 @@ public class RagService {
                 )
                 .call()
                 .content();
+
+
+        List<SourceCitation> citations =   buildCitations(documents);
+
+
+
+        return new RAGResponse(
+                answer,
+                citations
+        );
+
+    }
+
+
+    private List<SourceCitation> buildCitations(
+            List<Document> documents
+    ) {
+
+        return documents.stream()
+                .map(document -> {
+
+                    Map<String, Object> metadata =
+                            document.getMetadata();
+
+
+                    return new SourceCitation(
+                            getMetadata(metadata, MetaDataKeys.SOURCE, String.class),
+                            getMetadata(metadata, MetaDataKeys.FILE_TYPE, String.class),
+                            getMetadata(metadata, MetaDataKeys.PAGE_NUMBER, Integer.class),
+                            getMetadata(metadata, MetaDataKeys.CHUNK_NUMBER, Integer.class),
+                            getMetadata(metadata, MetaDataKeys.DISTANCE, Double.class)
+                    );
+
+                })
+                .toList();
     }
 }

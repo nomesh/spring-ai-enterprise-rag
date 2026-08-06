@@ -28,7 +28,7 @@ public class DocumentRetriever {
     private int topK;
 
     @Value("${rag.retrieval.similarity-threshold}")
-    private double similarityThreshold;
+    private double similarityThreshold; //Retrieval quality is controlled more by search configuration than by the LLM.
 
     public DocumentRetriever(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
@@ -48,6 +48,7 @@ public class DocumentRetriever {
 
 
 /*
+ Retrieval quality is controlled more by search configuration than by the LLM.
  * Score  | 	Interpretation
  * -------------------------
  * > 0.90	|  Excellent match
