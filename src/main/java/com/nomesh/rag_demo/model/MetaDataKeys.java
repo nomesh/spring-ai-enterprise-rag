@@ -1,0 +1,12 @@
+package com.nomesh.rag_demo.model;
+
+public final class MetaDataKeys {
+
+    public static final String SOURCE = "source";
+    public static final String FILE_TYPE = "fileType";
+    public static final String CHUNK_NUMBER = "chunkNumber";
+    public static final String DISTANCE = "distance";
+    public static final String INGESTED_AT = "ingestedAt";
+
+    private MetaDataKeys() {}
+}
