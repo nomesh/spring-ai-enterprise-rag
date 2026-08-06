@@ -1,5 +1,6 @@
 package com.nomesh.rag_demo.ingestion.processor;
 
+import com.nomesh.rag_demo.model.MetaDataKeys;
 import org.springframework.stereotype.Component;
 import org.springframework.ai.document.Document;
 
@@ -30,21 +31,9 @@ import java.util.Map;
 
         for (Document document : documents) {
 
-            document.getMetadata().put("source", sourceFileName);
-
-            document.getMetadata().put(
-                    "fileType",
-                    getFileExtension(sourceFileName)
-            );
-
-            document.getMetadata().put(
-                    "ingestedAt",
-                    LocalDateTime.now().toString()
-            );
-
-            document.getMetadata().put("source", sourceFileName);
-            document.getMetadata().put("fileType", getFileExtension(sourceFileName));
-            document.getMetadata().put("ingestedAt", Instant.now().toString());
+            document.getMetadata().put(MetaDataKeys.SOURCE,sourceFileName );
+            document.getMetadata().put(MetaDataKeys.FILE_TYPE, getFileExtension(sourceFileName));
+            document.getMetadata().put(MetaDataKeys.INGESTED_AT, Instant.now().toString());
 
             enrichedDocuments.add(document);
         }

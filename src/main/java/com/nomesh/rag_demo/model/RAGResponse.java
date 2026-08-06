@@ -2,9 +2,11 @@ package com.nomesh.rag_demo.model;
 
 import java.util.List;
 
-public class RAGResponse {
+public record RAGResponse(
 
-    String answer;
-    List<SourceCitation> citations;
+        String answer,
 
+        List<SourceCitation> sources
+
+) {
 }
