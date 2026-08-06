@@ -3,6 +3,7 @@ package com.nomesh.rag_demo.retrieval;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -23,6 +24,12 @@ public class DocumentRetriever {
 
     private final VectorStore vectorStore;
 
+    @Value("${rag.retrieval.top-k}")
+    private int topK;
+
+    @Value("${rag.retrieval.similarity-threshold}")
+    private double similarityThreshold;
+
     public DocumentRetriever(VectorStore vectorStore) {
         this.vectorStore = vectorStore;
     }
@@ -31,8 +38,8 @@ public class DocumentRetriever {
 
         SearchRequest request = SearchRequest.builder()
                 .query(question)
-                .topK(5)
-                .similarityThreshold(0.50)
+                .topK(topK)
+                .similarityThreshold(similarityThreshold)
                 .build();
 
         return vectorStore.similaritySearch(request);
