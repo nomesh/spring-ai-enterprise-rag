@@ -1,0 +1,17 @@
+package com.nomesh.rag;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+@SpringBootApplication
+public class SpringAiEnterpriseRagApplication {
+
+	public static void main(String[] args) {
+
+		SpringApplication.run(
+				SpringAiEnterpriseRagApplication.class,
+				args
+		);
+	}
+
+}
