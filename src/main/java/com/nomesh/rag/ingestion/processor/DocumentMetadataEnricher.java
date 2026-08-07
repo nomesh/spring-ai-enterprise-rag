@@ -1,52 +1,46 @@
 package com.nomesh.rag.ingestion.processor;
 
-import com.nomesh.rag.model.MetaDataKeys;
-import org.springframework.stereotype.Component;
+import com.nomesh.rag.metadata.DocumentMetadata;
+import com.nomesh.rag.metadata.mapper.DocumentMetadataMapper;
 import org.springframework.ai.document.Document;
+import org.springframework.stereotype.Component;
 
-import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
- * retrieval quality depends heavily on good document preparation.
- * Before implementing retrieval, we want to make sure the data entering PGVector is enterprise-ready.
- * @author Nomesh De Silva
+ * Adds standard document metadata to generated document chunks.
  *
+ * <p>Each chunk keeps the same document-level metadata so filtering,
+ * citations, and document lifecycle operations can work consistently
+ * across the whole document.</p>
  */
-    @Component
-    public class DocumentMetadataEnricher {
+@Component
+public class DocumentMetadataEnricher {
 
-    /**
-     * Fetch documents enriched with meta data for ease of filtering.
-     * @param documents
-     * @param sourceFileName
-     * @return
-     */
-    public List<Document> enrich(List<Document> documents, String sourceFileName) {
+    private final DocumentMetadataMapper metadataMapper;
 
-        List<Document> enrichedDocuments = new ArrayList<>();
-
-        for (Document document : documents) {
-
-            document.getMetadata().put(MetaDataKeys.SOURCE,sourceFileName );
-            document.getMetadata().put(MetaDataKeys.FILE_TYPE, getFileExtension(sourceFileName));
-            document.getMetadata().put(MetaDataKeys.INGESTED_AT, Instant.now().toString());
-
-            enrichedDocuments.add(document);
-        }
-
-        return enrichedDocuments;
+    public DocumentMetadataEnricher(DocumentMetadataMapper metadataMapper) {
+        this.metadataMapper = metadataMapper;
     }
 
-    private String getFileExtension(String fileName) {
+    /**
+     * Adds document metadata to every chunk created from the same source.
+     *
+     * @param documents chunks generated from the source document
+     * @param metadata standard metadata describing the source document
+     * @return enriched document chunks
+     */
+    public List<Document> enrich(
+            List<Document> documents,
+            DocumentMetadata metadata
+    ) {
+        Map<String, Object> documentMetadata = metadataMapper.toMap(metadata);
 
-        int index = fileName.lastIndexOf('.');
-
-        if (index == -1) {
-            return "UNKNOWN";
+        for (Document document : documents) {
+            document.getMetadata().putAll(documentMetadata);
         }
 
-        return fileName.substring(index + 1).toUpperCase();
+        return documents;
     }
 }
