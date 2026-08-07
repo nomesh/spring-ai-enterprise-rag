@@ -1,6 +1,7 @@
 package com.nomesh.rag.metadata.mapper;
 
 import com.nomesh.rag.metadata.DocumentMetadata;
+import com.nomesh.rag.utils.FileTypeResolver;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -18,6 +19,11 @@ import java.util.UUID;
 public class LocalFileMetadataMapper {
 
     private static final String SOURCE_LOCAL_UPLOAD = "LOCAL_UPLOAD";
+    private final FileTypeResolver fileTypeResolver;
+
+    public LocalFileMetadataMapper(FileTypeResolver fileTypeResolver) {
+        this.fileTypeResolver = fileTypeResolver;
+    }
 
     /**
      * Creates document metadata from an uploaded file.
@@ -28,14 +34,13 @@ public class LocalFileMetadataMapper {
      * @param file uploaded document
      * @return standard metadata for the document
      */
-    public DocumentMetadata map(MultipartFile file) {
-        String documentId = UUID.randomUUID().toString();
+    public DocumentMetadata map(String sourceFileName) {
 
         return new DocumentMetadata(
-                documentId,
-                file.getOriginalFilename(),
-                resolveFileType(file),
-                SOURCE_LOCAL_UPLOAD,
+                UUID.randomUUID().toString(),
+                sourceFileName,
+                fileTypeResolver.resolve(sourceFileName),
+                sourceFileName,   // We'll improve this in the next story
                 null,
                 null,
                 List.of(),

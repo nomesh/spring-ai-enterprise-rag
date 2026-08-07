@@ -1,7 +1,8 @@
-package com.nomesh.rag.metadata.mapper;
+package test.com.nomesh.rag.metadata.mapper;
 
 import com.nomesh.rag.metadata.DocumentMetadata;
 import com.nomesh.rag.metadata.MetadataConstants;
+import com.nomesh.rag.metadata.mapper.DocumentMetadataMapper;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;

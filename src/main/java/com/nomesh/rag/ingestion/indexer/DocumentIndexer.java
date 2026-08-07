@@ -1,5 +1,6 @@
 package com.nomesh.rag.ingestion.indexer;
 
+import com.nomesh.rag.metadata.MetadataConstants;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.VectorStore;
 import org.springframework.ai.vectorstore.filter.Filter;
@@ -11,7 +12,7 @@ import java.util.List;
 @Service
 public class DocumentIndexer {
 
-    private static final String SOURCE_METADATA_KEY = "source";
+    private static final String SOURCE_METADATA_KEY = MetadataConstants.SOURCE;
 
     private final VectorStore vectorStore;
 
@@ -39,7 +40,7 @@ public class DocumentIndexer {
         Filter.Expression filterExpression =
                 new FilterExpressionBuilder()
                         .eq(
-                                SOURCE_METADATA_KEY,
+                                MetadataConstants.SOURCE,
                                 sourceFileName
                         )
                         .build();

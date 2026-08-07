@@ -1,4 +1,4 @@
-package com.nomesh.rag.metadata;
+package test.com.nomesh.rag.metadata;
 
 import org.junit.jupiter.api.Test;
 
