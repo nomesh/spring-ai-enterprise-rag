@@ -1,6 +1,8 @@
 package com.nomesh.rag_demo.service;
 
+import com.nomesh.rag_demo.dto.DocumentDeleteResponse;
 import com.nomesh.rag_demo.dto.DocumentInfo;
+import com.nomesh.rag_demo.ingestion.indexer.DocumentIndexer;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -16,11 +18,14 @@ import java.util.stream.Stream;
 public class DocumentManagementService {
 
     private final DocumentStorageService storageService;
+    private final DocumentIndexer documentIndexer;
 
     public DocumentManagementService(
-            DocumentStorageService storageService
+            DocumentStorageService storageService,
+            DocumentIndexer documentIndexer
     ) {
         this.storageService = storageService;
+        this.documentIndexer = documentIndexer;
     }
 
     public List<DocumentInfo> listDocuments() throws IOException {
@@ -40,6 +45,33 @@ public class DocumentManagementService {
                     )
                     .toList();
         }
+    }
+
+    public DocumentDeleteResponse deleteDocument(
+            String fileName
+    ) throws IOException {
+
+        if (!storageService.exists(fileName)) {
+            throw new IllegalArgumentException(
+                    "Document does not exist: " + fileName
+            );
+        }
+
+        /*
+         * Remove all indexed chunks belonging to this source.
+         */
+        documentIndexer.deleteBySource(fileName);
+
+        /*
+         * Remove the persisted original file.
+         */
+        storageService.delete(fileName);
+
+        return new DocumentDeleteResponse(
+                fileName,
+                "DELETED",
+                "Document and indexed chunks deleted successfully."
+        );
     }
 
     private DocumentInfo toDocumentInfo(Path path) {

@@ -42,13 +42,7 @@ public class DocumentStorageService {
         }
 
         String cleanFileName =
-                StringUtils.cleanPath(originalFileName);
-
-        if (cleanFileName.contains("..")) {
-            throw new IllegalArgumentException(
-                    "Invalid file path: " + cleanFileName
-            );
-        }
+                validateAndCleanFileName(originalFileName);
 
         Path targetPath =
                 uploadDirectory
@@ -106,5 +100,68 @@ public class DocumentStorageService {
                     exception
             );
         }
+    }
+
+    public Path resolve(String fileName) {
+
+        String cleanFileName =
+                validateAndCleanFileName(fileName);
+
+        Path resolvedPath =
+                uploadDirectory
+                        .resolve(cleanFileName)
+                        .normalize();
+
+        if (!resolvedPath.getParent().equals(uploadDirectory)) {
+            throw new IllegalArgumentException(
+                    "Invalid document path."
+            );
+        }
+
+        return resolvedPath;
+    }
+
+    public boolean exists(String fileName) {
+
+        Path filePath = resolve(fileName);
+
+        return Files.exists(filePath)
+                && Files.isRegularFile(filePath);
+    }
+
+    public void delete(String fileName) throws IOException {
+
+        Path filePath = resolve(fileName);
+
+        if (!Files.exists(filePath)) {
+            throw new IllegalArgumentException(
+                    "Document does not exist: " + fileName
+            );
+        }
+
+        Files.delete(filePath);
+    }
+
+    private String validateAndCleanFileName(String fileName) {
+
+        if (fileName == null || fileName.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Document filename is required."
+            );
+        }
+
+        String cleanFileName =
+                StringUtils.cleanPath(fileName);
+
+        if (cleanFileName.contains("..")
+                || cleanFileName.contains("/")
+                || cleanFileName.contains("\\")) {
+
+            throw new IllegalArgumentException(
+                    "Invalid document filename."
+            );
+        }
+
+        return cleanFileName;
     }
 }

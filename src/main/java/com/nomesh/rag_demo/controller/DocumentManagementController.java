@@ -1,7 +1,9 @@
 package com.nomesh.rag_demo.controller;
 
+import com.nomesh.rag_demo.dto.DocumentDeleteResponse;
 import com.nomesh.rag_demo.dto.DocumentInfo;
 import com.nomesh.rag_demo.service.DocumentManagementService;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -20,10 +22,20 @@ public class DocumentManagementController {
     }
 
     @GetMapping
-    public List<DocumentInfo> listDocuments() throws IOException {
+    public List<DocumentInfo> listDocuments()
+            throws IOException {
 
         return service.listDocuments();
-
     }
 
+    @DeleteMapping("/{fileName}")
+    public ResponseEntity<DocumentDeleteResponse> deleteDocument(
+            @PathVariable String fileName
+    ) throws IOException {
+
+        DocumentDeleteResponse response =
+                service.deleteDocument(fileName);
+
+        return ResponseEntity.ok(response);
+    }
 }
