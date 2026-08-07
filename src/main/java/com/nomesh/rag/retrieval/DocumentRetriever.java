@@ -1,23 +1,21 @@
 package com.nomesh.rag.retrieval;
 
-import com.nomesh.rag.search.filter.DocumentSearchFilter;
+import com.nomesh.rag.search.EnterpriseSearchRequest;
 import com.nomesh.rag.search.filter.MetadataFilterTranslator;
 import org.springframework.ai.document.Document;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.VectorStore;
-import org.springframework.ai.vectorstore.filter.Filter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
- * Retrieves relevant documents from the vector store using semantic search.
+ * Retrieves relevant documents from the vector store.
  *
- * <p>Searches can optionally be narrowed using document metadata filters,
- * allowing the platform to combine semantic similarity with enterprise
- * attributes such as department, file type, or classification.</p>
+ * <p>The retriever converts the platform's search request into the format
+ * required by Spring AI while keeping the rest of the application independent
+ * from the underlying vector-store API.</p>
  */
 @Component
 public class DocumentRetriever {
@@ -26,17 +24,16 @@ public class DocumentRetriever {
     private final MetadataFilterTranslator filterTranslator;
 
     @Value("${rag.retrieval.top-k}")
-    private int topK;
+    private int defaultTopK;
 
     @Value("${rag.retrieval.similarity-threshold}")
-    private double similarityThreshold;
+    private double defaultSimilarityThreshold;
 
     /**
-     * Creates a document retriever using the configured vector store
-     * and metadata filter translator.
+     * Creates a document retriever with the required search components.
      *
-     * @param vectorStore vector store used for similarity search
-     * @param filterTranslator converts domain filters into Spring AI expressions
+     * @param vectorStore vector store used for semantic retrieval
+     * @param filterTranslator converts metadata filters into Spring AI expressions
      */
     public DocumentRetriever(
             VectorStore vectorStore,
@@ -47,43 +44,61 @@ public class DocumentRetriever {
     }
 
     /**
-     * Retrieves documents using semantic similarity only.
+     * Retrieves documents using the supplied enterprise search request.
      *
-     * @param question search query
-     * @return relevant documents ordered by similarity
+     * <p>Platform defaults are used when result count or similarity threshold
+     * are not explicitly provided by the caller.</p>
+     *
+     * @param request enterprise search request
+     * @return relevant documents matching the search criteria
      */
-    public List<Document> retrieve(String question) {
-        return retrieve(question, null);
+    public List<Document> retrieve(EnterpriseSearchRequest request) {
+
+        SearchRequest.Builder searchRequest = SearchRequest.builder()
+                .query(request.query())
+                .topK(resolveTopK(request))
+                .similarityThreshold(resolveSimilarityThreshold(request));
+
+        filterTranslator.translate(request.filter())
+                .ifPresent(searchRequest::filterExpression);
+
+        return vectorStore.similaritySearch(
+                searchRequest.build()
+        );
     }
 
     /**
-     * Retrieves documents using semantic similarity and optional metadata filters.
+     * Retrieves documents using the default semantic search configuration.
      *
-     * <p>When no metadata filters are provided, the search behaves exactly
-     * like the existing semantic search flow.</p>
+     * <p>This method preserves the existing retrieval API while callers
+     * gradually migrate to the enterprise search contract.</p>
      *
      * @param question search query
-     * @param filter optional document metadata filters
-     * @return relevant documents matching both semantic and metadata criteria
+     * @return relevant documents ordered by semantic similarity
      */
-    public List<Document> retrieve(
-            String question,
-            DocumentSearchFilter filter
+    public List<Document> retrieve(String question) {
+
+        return retrieve(
+                new EnterpriseSearchRequest(
+                        question,
+                        null,
+                        null,
+                        null
+                )
+        );
+    }
+
+    private int resolveTopK(EnterpriseSearchRequest request) {
+        return request.topK() != null
+                ? request.topK()
+                : defaultTopK;
+    }
+
+    private double resolveSimilarityThreshold(
+            EnterpriseSearchRequest request
     ) {
-        SearchRequest.Builder requestBuilder = SearchRequest.builder()
-                .query(question)
-                .topK(topK)
-                .similarityThreshold(similarityThreshold);
-
-        Optional<Filter.Expression> filterExpression =
-                filterTranslator.translate(filter);
-
-        filterExpression.ifPresent(
-                requestBuilder::filterExpression
-        );
-
-        return vectorStore.similaritySearch(
-                requestBuilder.build()
-        );
+        return request.similarityThreshold() != null
+                ? request.similarityThreshold()
+                : defaultSimilarityThreshold;
     }
 }
