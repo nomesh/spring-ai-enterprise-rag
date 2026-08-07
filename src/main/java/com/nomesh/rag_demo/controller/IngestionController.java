@@ -2,6 +2,8 @@ package com.nomesh.rag_demo.controller;
 
 import com.nomesh.rag_demo.dto.DocumentUploadResponse;
 import com.nomesh.rag_demo.ingestion.ingestionService.DocumentIngestionService;
+import com.nomesh.rag_demo.service.DocumentStorageService;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
@@ -22,19 +25,20 @@ public class IngestionController {
             Set.of("txt");
 
     private final DocumentIngestionService ingestionService;
+    private final DocumentStorageService storageService;
 
-    public IngestionController(
-            DocumentIngestionService ingestionService
+    public IngestionController(DocumentIngestionService ingestionService,DocumentStorageService storageService
     ) {
         this.ingestionService = ingestionService;
+        this.storageService = storageService;
     }
 
     @PostMapping(
             value = "/upload",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
-    public ResponseEntity<DocumentUploadResponse> upload(
-            @RequestParam("file") MultipartFile file
+
+    public ResponseEntity<DocumentUploadResponse> upload(@RequestParam("file") MultipartFile file
     ) throws IOException {
 
         validateFile(file);
@@ -42,9 +46,14 @@ public class IngestionController {
         String originalFileName =
                 StringUtils.cleanPath(Objects.requireNonNull(file.getOriginalFilename()));
 
+        Path storedPath = storageService.store(file);
+
+        Resource storedResource =
+                storageService.loadAsResource(storedPath);
+
         int indexedChunks =
                 ingestionService.ingest(
-                        file.getResource(),
+                        storedResource,
                         originalFileName
                 );
 

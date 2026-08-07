@@ -4,24 +4,40 @@ import com.nomesh.rag_demo.dto.DocumentInfo;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
-import java.nio.file.*;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Stream;
 
 @Service
 public class DocumentManagementService {
 
-    private static final Path DOCUMENT_PATH =
-            Paths.get("src/main/resources/documents");
+    private final DocumentStorageService storageService;
+
+    public DocumentManagementService(
+            DocumentStorageService storageService
+    ) {
+        this.storageService = storageService;
+    }
 
     public List<DocumentInfo> listDocuments() throws IOException {
 
-        try (Stream<Path> files = Files.list(DOCUMENT_PATH)) {
+        Path uploadDirectory =
+                storageService.getUploadDirectory();
+
+        try (Stream<Path> files = Files.list(uploadDirectory)) {
 
             return files
                     .filter(Files::isRegularFile)
                     .map(this::toDocumentInfo)
+                    .sorted(
+                            Comparator.comparing(
+                                    DocumentInfo::uploadedAt
+                            ).reversed()
+                    )
                     .toList();
         }
     }
@@ -29,41 +45,38 @@ public class DocumentManagementService {
     private DocumentInfo toDocumentInfo(Path path) {
 
         try {
+            String fileName =
+                    path.getFileName().toString();
 
             return new DocumentInfo(
-
-                    path.getFileName().toString(),
-
-                    path.getFileName().toString(),
-
-                    getExtension(path),
-
+                    fileName,
+                    fileName,
+                    getExtension(fileName),
                     Instant.ofEpochMilli(
-                            Files.getLastModifiedTime(path).toMillis()
+                            Files.getLastModifiedTime(path)
+                                    .toMillis()
                     ).toString(),
-
-                    "Indexed"
-
+                    "INDEXED"
             );
 
-        } catch (IOException e) {
-
-            throw new RuntimeException(e);
-
+        } catch (IOException exception) {
+            throw new IllegalStateException(
+                    "Could not read document metadata.",
+                    exception
+            );
         }
     }
 
-    private String getExtension(Path path) {
+    private String getExtension(String fileName) {
 
-        String name = path.getFileName().toString();
+        int index = fileName.lastIndexOf('.');
 
-        int index = name.lastIndexOf('.');
-
-        if (index == -1) {
+        if (index < 0 || index == fileName.length() - 1) {
             return "UNKNOWN";
         }
 
-        return name.substring(index + 1).toUpperCase();
+        return fileName
+                .substring(index + 1)
+                .toUpperCase(Locale.ROOT);
     }
-
 }
