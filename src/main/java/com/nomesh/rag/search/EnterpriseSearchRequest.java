@@ -10,14 +10,18 @@ import com.nomesh.rag.search.filter.DocumentSearchFilter;
  * changing the public search contract.</p>
  *
  * @param query search text
- * @param topK maximum number of results to return
+ * @param topK maximum number of candidates to retrieve
  * @param similarityThreshold minimum semantic similarity score
  * @param filter optional metadata filters used to narrow the search
+ * @param pagination optional pagination preferences for returned results
+ *
+ * @author Nomesh De Silva
  */
 public record EnterpriseSearchRequest(
         String query,
         Integer topK,
         Double similarityThreshold,
-        DocumentSearchFilter filter
+        DocumentSearchFilter filter,
+        SearchPagination pagination
 ) {
 }

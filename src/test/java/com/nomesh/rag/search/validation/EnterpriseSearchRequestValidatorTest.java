@@ -24,7 +24,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "annual leave",
                         10,
                         0.5,
-                        null
+                        null, null
                 );
 
         assertDoesNotThrow(() -> validator.validate(request));
@@ -51,7 +51,7 @@ class EnterpriseSearchRequestValidatorTest {
                         null,
                         10,
                         0.5,
-                        null
+                        null, null
                 );
 
         EnterpriseSearchValidationException exception =
@@ -73,7 +73,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "   ",
                         10,
                         0.5,
-                        null
+                        null, null
                 );
 
         assertThrows(
@@ -89,7 +89,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "annual leave",
                         0,
                         0.5,
-                        null
+                        null, null
                 );
 
         assertThrows(
@@ -105,7 +105,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "annual leave",
                         101,
                         0.5,
-                        null
+                        null, null
                 );
 
         assertThrows(
@@ -121,7 +121,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "annual leave",
                         10,
                         -0.1,
-                        null
+                        null, null
                 );
 
         assertThrows(
@@ -137,7 +137,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "annual leave",
                         10,
                         1.1,
-                        null
+                        null, null
                 );
 
         assertThrows(
@@ -153,7 +153,7 @@ class EnterpriseSearchRequestValidatorTest {
                         "annual leave",
                         null,
                         null,
-                        null
+                        null, null
                 );
 
         assertDoesNotThrow(() -> validator.validate(request));

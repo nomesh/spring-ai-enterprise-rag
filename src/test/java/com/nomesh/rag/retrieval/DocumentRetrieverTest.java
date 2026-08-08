@@ -75,7 +75,7 @@ class DocumentRetrieverTest {
                         "annual leave policy",
                         20,
                         0.85,
-                        null
+                        null, null
                 );
 
         when(filterTranslator.translate(null))
@@ -115,7 +115,7 @@ class DocumentRetrieverTest {
                         "annual leave policy",
                         null,
                         null,
-                        filter
+                        filter, null
                 );
 
         Filter.Expression expression = mock(Filter.Expression.class);

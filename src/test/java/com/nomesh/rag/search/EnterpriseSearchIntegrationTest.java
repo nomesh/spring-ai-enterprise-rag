@@ -37,7 +37,7 @@ class EnterpriseSearchIntegrationTest {
                         "   ",
                         10,
                         0.5,
-                        null
+                        null, null
                 );
 
         mockMvc.perform(
@@ -60,7 +60,7 @@ class EnterpriseSearchIntegrationTest {
                         "annual leave",
                         0,
                         0.5,
-                        null
+                        null, null
                 );
 
         mockMvc.perform(
