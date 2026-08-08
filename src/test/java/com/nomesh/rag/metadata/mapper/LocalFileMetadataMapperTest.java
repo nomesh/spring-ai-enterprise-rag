@@ -1,4 +1,4 @@
-package test.com.nomesh.rag.metadata.mapper;
+package com.nomesh.rag.metadata.mapper;
 
 import com.nomesh.rag.metadata.DocumentMetadata;
 import com.nomesh.rag.utils.FileTypeResolver;
