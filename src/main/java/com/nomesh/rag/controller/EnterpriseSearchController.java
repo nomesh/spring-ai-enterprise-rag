@@ -5,6 +5,7 @@ import com.nomesh.rag.search.EnterpriseSearchRequest;
 import com.nomesh.rag.search.EnterpriseSearchResponse;
 import com.nomesh.rag.search.SearchResult;
 import com.nomesh.rag.search.mapper.SearchResultMapper;
+import com.nomesh.rag.search.validation.EnterpriseSearchRequestValidator;
 import org.springframework.ai.document.Document;
 import org.springframework.web.bind.annotation.*;
 
@@ -25,6 +26,7 @@ public class EnterpriseSearchController {
 
     private final DocumentRetriever documentRetriever;
     private final SearchResultMapper searchResultMapper;
+    private final EnterpriseSearchRequestValidator requestValidator;
 
     /**
      * Creates the enterprise search controller.
@@ -34,10 +36,12 @@ public class EnterpriseSearchController {
      */
     public EnterpriseSearchController(
             DocumentRetriever documentRetriever,
-            SearchResultMapper searchResultMapper
+            SearchResultMapper searchResultMapper,
+            EnterpriseSearchRequestValidator requestValidator
     ) {
         this.documentRetriever = documentRetriever;
         this.searchResultMapper = searchResultMapper;
+        this.requestValidator = requestValidator;
     }
 
     /**
@@ -50,6 +54,8 @@ public class EnterpriseSearchController {
     public EnterpriseSearchResponse search(
             @RequestBody EnterpriseSearchRequest request
     ) {
+
+        requestValidator.validate(request);
 
         List<Document> documents = documentRetriever.retrieve(request);
         List<SearchResult> results = searchResultMapper.map(documents);
