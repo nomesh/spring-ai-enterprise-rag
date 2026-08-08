@@ -1,6 +1,7 @@
 package com.nomesh.rag.search.validation;
 
 import com.nomesh.rag.search.EnterpriseSearchRequest;
+import com.nomesh.rag.search.SearchPagination;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -157,5 +158,94 @@ class EnterpriseSearchRequestValidatorTest {
                 );
 
         assertDoesNotThrow(() -> validator.validate(request));
+    }
+
+    @Test
+    void shouldRejectNegativePage() {
+
+        EnterpriseSearchRequest request =
+                new EnterpriseSearchRequest(
+                        "annual leave",
+                        10,
+                        0.5,
+                        null,
+                        new SearchPagination(-1, 10)
+                );
+
+        EnterpriseSearchValidationException exception =
+                assertThrows(
+                        EnterpriseSearchValidationException.class,
+                        () -> validator.validate(request)
+                );
+
+        assertEquals(
+                "page must be zero or greater.",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldRejectZeroPageSize() {
+
+        EnterpriseSearchRequest request =
+                new EnterpriseSearchRequest(
+                        "annual leave",
+                        10,
+                        0.5,
+                        null,
+                        new SearchPagination(0, 0)
+                );
+
+        EnterpriseSearchValidationException exception =
+                assertThrows(
+                        EnterpriseSearchValidationException.class,
+                        () -> validator.validate(request)
+                );
+
+        assertEquals(
+                "size must be greater than zero.",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldRejectPageSizeAboveMaximum() {
+
+        EnterpriseSearchRequest request =
+                new EnterpriseSearchRequest(
+                        "annual leave",
+                        10,
+                        0.5,
+                        null,
+                        new SearchPagination(0, 101)
+                );
+
+        EnterpriseSearchValidationException exception =
+                assertThrows(
+                        EnterpriseSearchValidationException.class,
+                        () -> validator.validate(request)
+                );
+
+        assertEquals(
+                "size must not exceed 100.",
+                exception.getMessage()
+        );
+    }
+
+    @Test
+    void shouldAcceptValidPagination() {
+
+        EnterpriseSearchRequest request =
+                new EnterpriseSearchRequest(
+                        "annual leave",
+                        20,
+                        0.5,
+                        null,
+                        new SearchPagination(0, 10)
+                );
+
+        assertDoesNotThrow(
+                () -> validator.validate(request)
+        );
     }
 }

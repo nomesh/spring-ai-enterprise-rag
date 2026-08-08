@@ -1,6 +1,7 @@
 package com.nomesh.rag.search.validation;
 
 import com.nomesh.rag.search.EnterpriseSearchRequest;
+import com.nomesh.rag.search.SearchPagination;
 import org.springframework.stereotype.Component;
 
 /**
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Component;
 public class EnterpriseSearchRequestValidator {
 
     private static final int MAX_TOP_K = 100;
+    private static final int MAX_PAGE_SIZE = 100;
 
     /**
      * Validates the supplied enterprise search request.
@@ -35,9 +37,33 @@ public class EnterpriseSearchRequestValidator {
                     "Search query must not be blank."
             );
         }
-
+        validatePagination(request.pagination());
         validateTopK(request.topK());
         validateSimilarityThreshold(request.similarityThreshold());
+    }
+
+    private void validatePagination(SearchPagination pagination) {
+        if (pagination == null) {
+            return;
+        }
+
+        if (pagination.page() != null && pagination.page() < 0) {
+            throw new EnterpriseSearchValidationException(
+                    "page must be zero or greater."
+            );
+        }
+
+        if (pagination.size() != null && pagination.size() <= 0) {
+            throw new EnterpriseSearchValidationException(
+                    "size must be greater than zero."
+            );
+        }
+
+        if (pagination.size() != null && pagination.size() > MAX_PAGE_SIZE) {
+            throw new EnterpriseSearchValidationException(
+                    "size must not exceed " + MAX_PAGE_SIZE + "."
+            );
+        }
     }
 
     private void validateTopK(Integer topK) {
