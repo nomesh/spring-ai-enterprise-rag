@@ -54,16 +54,9 @@ public class DocumentRetriever {
      */
     public List<Document> retrieve(EnterpriseSearchRequest request) {
 
-        SearchRequest.Builder searchRequest = SearchRequest.builder()
-                .query(request.query())
-                .topK(resolveTopK(request))
-                .similarityThreshold(resolveSimilarityThreshold(request));
-
-        filterTranslator.translate(request.filter())
-                .ifPresent(searchRequest::filterExpression);
-
-        return vectorStore.similaritySearch(
-                searchRequest.build()
+        return retrieve(
+                request,
+                resolveTopK(request)
         );
     }
 
@@ -101,5 +94,31 @@ public class DocumentRetriever {
         return request.similarityThreshold() != null
                 ? request.similarityThreshold()
                 : defaultSimilarityThreshold;
+    }
+
+    /**
+     * Retrieves documents using the supplied enterprise search request and
+     * candidate retrieval limit.
+     *
+     * @param request enterprise search request
+     * @param retrievalLimit maximum number of ranked candidates to retrieve
+     * @return relevant documents ordered by semantic similarity
+     */
+    public List<Document> retrieve(
+            EnterpriseSearchRequest request,
+            int retrievalLimit
+    ) {
+
+        SearchRequest.Builder searchRequest = SearchRequest.builder()
+                .query(request.query())
+                .topK(retrievalLimit)
+                .similarityThreshold(resolveSimilarityThreshold(request));
+
+        filterTranslator.translate(request.filter())
+                .ifPresent(searchRequest::filterExpression);
+
+        return vectorStore.similaritySearch(
+                searchRequest.build()
+        );
     }
 }

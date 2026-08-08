@@ -1,6 +1,7 @@
 package com.nomesh.rag.search.pagination;
 
 import com.nomesh.rag.search.SearchPagination;
+import org.springframework.stereotype.Component;
 
 /**
  * Resolves effective pagination settings for enterprise search requests.
@@ -10,6 +11,7 @@ import com.nomesh.rag.search.SearchPagination;
  *
  * @author Nomesh De Silva
  */
+@Component
 public class SearchPaginationResolver {
 
     public static final int DEFAULT_PAGE = 0;

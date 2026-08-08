@@ -10,6 +10,11 @@ import com.nomesh.rag.search.validation.EnterpriseSearchRequestValidator;
 import org.springframework.ai.document.Document;
 import org.springframework.web.bind.annotation.*;
 
+import com.nomesh.rag.search.SearchPagination;
+import com.nomesh.rag.search.pagination.SearchPaginationResolver;
+import com.nomesh.rag.search.pagination.SearchWindow;
+import com.nomesh.rag.search.pagination.SearchWindowResolver;
+
 import java.util.List;
 
 /**
@@ -29,6 +34,9 @@ public class EnterpriseSearchController {
     private final SearchResultMapper searchResultMapper;
     private final EnterpriseSearchRequestValidator requestValidator;
 
+    private final SearchPaginationResolver paginationResolver;
+    private final SearchWindowResolver searchWindowResolver;
+
     /**
      * Creates the enterprise search controller.
      *
@@ -38,11 +46,15 @@ public class EnterpriseSearchController {
     public EnterpriseSearchController(
             DocumentRetriever documentRetriever,
             SearchResultMapper searchResultMapper,
-            EnterpriseSearchRequestValidator requestValidator
+            EnterpriseSearchRequestValidator requestValidator,
+            SearchPaginationResolver paginationResolver,
+            SearchWindowResolver searchWindowResolver
     ) {
         this.documentRetriever = documentRetriever;
         this.searchResultMapper = searchResultMapper;
         this.requestValidator = requestValidator;
+        this.paginationResolver = paginationResolver;
+        this.searchWindowResolver = searchWindowResolver;
     }
 
     /**
@@ -58,17 +70,47 @@ public class EnterpriseSearchController {
 
         requestValidator.validate(request);
 
-        List<Document> documents = documentRetriever.retrieve(request);
-        List<SearchResult> results = searchResultMapper.map(documents);
+        SearchPagination pagination =
+                paginationResolver.resolve(request.pagination());
+
+        SearchWindow window =
+                searchWindowResolver.resolve(pagination);
+
+        List<Document> documents =
+                documentRetriever.retrieve(
+                        request,
+                        window.retrievalLimit()
+                );
+
+        List<SearchResult> candidates =
+                searchResultMapper.map(documents);
+
+        int fromIndex = Math.min(
+                window.offset(),
+                candidates.size()
+        );
+
+        int toIndex = Math.min(
+                fromIndex + window.pageSize(),
+                candidates.size()
+        );
+
+        List<SearchResult> pageResults =
+                List.copyOf(
+                        candidates.subList(fromIndex, toIndex)
+                );
+
+        boolean hasMore =
+                candidates.size() > toIndex;
 
         return new EnterpriseSearchResponse(
                 request.query(),
-                results,
+                pageResults,
                 new SearchPageMetadata(
-                        0,
-                        results.size(),
-                        results.size(),
-                        false
+                        pagination.page(),
+                        pagination.size(),
+                        pageResults.size(),
+                        hasMore
                 )
         );
     }

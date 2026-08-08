@@ -2,6 +2,7 @@ package com.nomesh.rag.search.pagination;
 
 import com.nomesh.rag.search.SearchPagination;
 import com.nomesh.rag.search.validation.EnterpriseSearchValidationException;
+import org.springframework.stereotype.Component;
 
 /**
  * Resolves the internal candidate window required for paginated search.
@@ -12,6 +13,7 @@ import com.nomesh.rag.search.validation.EnterpriseSearchValidationException;
  *
  * @author Nomesh De Silva
  */
+@Component
 public class SearchWindowResolver {
 
     public static final int MAX_RETRIEVAL_LIMIT = 100;
