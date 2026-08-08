@@ -3,11 +3,17 @@ package com.nomesh.rag.controller;
 import com.nomesh.rag.retrieval.DocumentRetriever;
 import com.nomesh.rag.search.EnterpriseSearchRequest;
 import com.nomesh.rag.search.EnterpriseSearchResponse;
+import com.nomesh.rag.search.SearchPageMetadata;
 import com.nomesh.rag.search.SearchResult;
 import com.nomesh.rag.search.mapper.SearchResultMapper;
 import com.nomesh.rag.search.validation.EnterpriseSearchRequestValidator;
 import org.springframework.ai.document.Document;
 import org.springframework.web.bind.annotation.*;
+
+import com.nomesh.rag.search.SearchPagination;
+import com.nomesh.rag.search.pagination.SearchPaginationResolver;
+import com.nomesh.rag.search.pagination.SearchWindow;
+import com.nomesh.rag.search.pagination.SearchWindowResolver;
 
 import java.util.List;
 
@@ -28,20 +34,30 @@ public class EnterpriseSearchController {
     private final SearchResultMapper searchResultMapper;
     private final EnterpriseSearchRequestValidator requestValidator;
 
+    private final SearchPaginationResolver paginationResolver;
+    private final SearchWindowResolver searchWindowResolver;
+
     /**
      * Creates the enterprise search controller.
      *
      * @param documentRetriever retrieval component used to execute searches
      * @param searchResultMapper mapper used to convert infrastructure results
+     * @param requestValidator validator used to enforce search request rules
+     * @param paginationResolver resolver used to apply pagination defaults
+     * @param searchWindowResolver resolver used to calculate bounded retrieval windows
      */
     public EnterpriseSearchController(
             DocumentRetriever documentRetriever,
             SearchResultMapper searchResultMapper,
-            EnterpriseSearchRequestValidator requestValidator
+            EnterpriseSearchRequestValidator requestValidator,
+            SearchPaginationResolver paginationResolver,
+            SearchWindowResolver searchWindowResolver
     ) {
         this.documentRetriever = documentRetriever;
         this.searchResultMapper = searchResultMapper;
         this.requestValidator = requestValidator;
+        this.paginationResolver = paginationResolver;
+        this.searchWindowResolver = searchWindowResolver;
     }
 
     /**
@@ -57,13 +73,48 @@ public class EnterpriseSearchController {
 
         requestValidator.validate(request);
 
-        List<Document> documents = documentRetriever.retrieve(request);
-        List<SearchResult> results = searchResultMapper.map(documents);
+        SearchPagination pagination =
+                paginationResolver.resolve(request.pagination());
+
+        SearchWindow window =
+                searchWindowResolver.resolve(pagination);
+
+        List<Document> documents =
+                documentRetriever.retrieve(
+                        request,
+                        window.retrievalLimit()
+                );
+
+        List<SearchResult> candidates =
+                searchResultMapper.map(documents);
+
+        int fromIndex = Math.min(
+                window.offset(),
+                candidates.size()
+        );
+
+        int toIndex = Math.min(
+                fromIndex + window.pageSize(),
+                candidates.size()
+        );
+
+        List<SearchResult> pageResults =
+                List.copyOf(
+                        candidates.subList(fromIndex, toIndex)
+                );
+
+        boolean hasMore =
+                candidates.size() > toIndex;
 
         return new EnterpriseSearchResponse(
                 request.query(),
-                results.size(),
-                results
+                pageResults,
+                new SearchPageMetadata(
+                        pagination.page(),
+                        pagination.size(),
+                        pageResults.size(),
+                        hasMore
+                )
         );
     }
 }
