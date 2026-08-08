@@ -13,6 +13,15 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+/**
+ * Coordinates ingestion of supported enterprise documents.
+ *
+ * <p>The service validates the uploaded resource, delegates format-specific
+ * extraction, performs chunking and metadata enrichment, and indexes the
+ * resulting document chunks into the configured vector store.</p>
+ *
+ * @author Nomesh De Silva
+ */
 @Service
 public class DocumentIngestionService {
 
@@ -23,6 +32,16 @@ public class DocumentIngestionService {
     private final LocalFileMetadataMapper localFileMetadataMapper;
     private final MetadataValidator metadataValidator;
 
+    /**
+     * Creates the document ingestion service.
+     *
+     * @param loader document content loader
+     * @param chunker document chunking component
+     * @param metadataEnricher metadata enrichment component
+     * @param indexer vector indexing component
+     * @param localFileMetadataMapper local-file metadata mapper
+     * @param metadataValidator enterprise metadata validator
+     */
     public DocumentIngestionService(
             DocumentLoader loader,
             DocumentChunker chunker,
@@ -39,17 +58,35 @@ public class DocumentIngestionService {
         this.metadataValidator = metadataValidator;
     }
 
-    public int ingest(Resource resource, String sourceFileName) {
+    /**
+     * Ingests an uploaded enterprise document.
+     *
+     * @param resource uploaded document resource
+     * @param sourceFileName original uploaded file name
+     * @return number of enriched chunks indexed
+     */
+    public int ingest(
+            Resource resource,
+            String sourceFileName
+    ) {
 
         if (resource == null || !resource.exists()) {
-            throw new IllegalArgumentException("Uploaded resource does not exist.");
+            throw new IllegalArgumentException(
+                    "Uploaded resource does not exist."
+            );
         }
 
         if (sourceFileName == null || sourceFileName.isBlank()) {
-            throw new IllegalArgumentException("Source file name is required.");
+            throw new IllegalArgumentException(
+                    "Source file name is required."
+            );
         }
 
-        List<Document> documents = loader.load(resource);
+        List<Document> documents =
+                loader.load(
+                        resource,
+                        sourceFileName
+                );
 
         if (documents == null || documents.isEmpty()) {
             throw new IllegalArgumentException(
@@ -57,7 +94,21 @@ public class DocumentIngestionService {
             );
         }
 
-        List<Document> chunks = chunker.split(documents);
+        boolean hasReadableText =
+                documents.stream()
+                        .anyMatch(document ->
+                                document.getText() != null
+                                        && !document.getText().isBlank()
+                        );
+
+        if (!hasReadableText) {
+            throw new IllegalArgumentException(
+                    "No readable text was found in the uploaded document."
+            );
+        }
+
+        List<Document> chunks =
+                chunker.split(documents);
 
         DocumentMetadata metadata =
                 localFileMetadataMapper.map(sourceFileName);
@@ -65,7 +116,10 @@ public class DocumentIngestionService {
         metadataValidator.validate(metadata);
 
         List<Document> enrichedChunks =
-                metadataEnricher.enrich(chunks, metadata);
+                metadataEnricher.enrich(
+                        chunks,
+                        metadata
+                );
 
         indexer.index(enrichedChunks);
 
