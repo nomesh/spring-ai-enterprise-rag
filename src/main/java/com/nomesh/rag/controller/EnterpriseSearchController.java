@@ -3,6 +3,7 @@ package com.nomesh.rag.controller;
 import com.nomesh.rag.retrieval.DocumentRetriever;
 import com.nomesh.rag.search.EnterpriseSearchRequest;
 import com.nomesh.rag.search.EnterpriseSearchResponse;
+import com.nomesh.rag.search.SearchPageMetadata;
 import com.nomesh.rag.search.SearchResult;
 import com.nomesh.rag.search.mapper.SearchResultMapper;
 import com.nomesh.rag.search.validation.EnterpriseSearchRequestValidator;
@@ -62,8 +63,13 @@ public class EnterpriseSearchController {
 
         return new EnterpriseSearchResponse(
                 request.query(),
-                results.size(),
-                results
+                results,
+                new SearchPageMetadata(
+                        0,
+                        results.size(),
+                        results.size(),
+                        false
+                )
         );
     }
 }
