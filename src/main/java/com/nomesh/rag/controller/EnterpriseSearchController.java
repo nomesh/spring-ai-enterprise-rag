@@ -42,6 +42,9 @@ public class EnterpriseSearchController {
      *
      * @param documentRetriever retrieval component used to execute searches
      * @param searchResultMapper mapper used to convert infrastructure results
+     * @param requestValidator validator used to enforce search request rules
+     * @param paginationResolver resolver used to apply pagination defaults
+     * @param searchWindowResolver resolver used to calculate bounded retrieval windows
      */
     public EnterpriseSearchController(
             DocumentRetriever documentRetriever,
